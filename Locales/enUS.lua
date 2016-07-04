@@ -35,7 +35,7 @@ end
 
 local translations = {
 	["Pot Reminder"] 				= "Pot Reminder",
-	["Enable Addon"]				= "Toggle Pot Reminder on/off",
+	["Enable"]						= "Toggle Pot Reminder on/off",
 	["Toggle addon enable"]			= true,
 	["LFR"]							= true,
 	["Enable in LFR"]				= true,

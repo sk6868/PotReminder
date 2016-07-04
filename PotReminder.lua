@@ -55,13 +55,13 @@ end
 
 -- Blizzard Interface Options Panel stuff START
 function ns:_CreateOptionsPanel()
-	local function newCheckbox(parent, label, description, onClick)
-		local check = CreateFrame("CheckButton", "EnableCheck" .. label, parent, "InterfaceOptionsCheckButtonTemplate")
+	local function newCheckbox(parent, name, label, description, onClick)
+		local check = CreateFrame("CheckButton", name, parent, "InterfaceOptionsCheckButtonTemplate")
 		check:SetScript("OnClick", function(self)
 			PlaySound(self:GetChecked() and "igMainMenuOptionCheckBoxOn" or "igMainMenuOptionCheckBoxOff")
 			onClick(self, self:GetChecked() and true or false)
 		end)
-		check.label = _G[check:GetName() .. "Text"]
+		check.label = _G[name .. "Text"]
 		check.label:SetText(label)
 		check.tooltipText = label
 		check.tooltipRequirement = description
@@ -72,28 +72,28 @@ function ns:_CreateOptionsPanel()
 	title:SetPoint("TOPLEFT", 16, -16)
 	title:SetText(L["General Options"])
 
-	local checkbox1 = newCheckbox(panel,
-		L["Enable Addon"],
+	local checkbox1 = newCheckbox(panel, "PotReminderOptionCheck1",
+		L["Enable"],
 		L["Toggle addon enable"],
 		function(self, value) PotReminderDB.enabled = value end)
 	checkbox1:SetChecked(PotReminderDB.enabled)
 	checkbox1:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -16)
 	
-	local checkbox2 = newCheckbox(panel,
+	local checkbox2 = newCheckbox(panel, "PotReminderOptionCheck2",
 		L["LFR"],
 		L["Enable in LFR"],
 		function(self, value) PotReminderDB.lfr = value end)
 	checkbox2:SetChecked(PotReminderDB.lfr)
 	checkbox2:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -46)
 	
-	local checkbox3 = newCheckbox(panel,
+	local checkbox3 = newCheckbox(panel, "PotReminderOptionCheck3",
 		L["Normal"],
 		L["Enable in Normal mode"],
 		function(self, value) PotReminderDB.normal = value end)
 	checkbox3:SetChecked(PotReminderDB.normal)
 	checkbox3:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -76)
 	
-	local checkbox4 = newCheckbox(panel,
+	local checkbox4 = newCheckbox(panel, "PotReminderOptionCheck4",
 		L["Enable Sound"],
 		L["Enable Sound"],
 		function(self, value) PotReminderDB.play_sound = value end)
