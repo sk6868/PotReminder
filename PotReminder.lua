@@ -22,6 +22,7 @@ PotReminder Usage
 /pr on    <enable pr>
 /pr off   <disable pr>
 /pr test  <test PotReminder>
+/pr sound <toggle sound>
 ]]
 local _debug = false
 ns.difficulty = 0
@@ -327,6 +328,8 @@ local function handler(msg, editbox)
 		PotReminderDB.enabled = true
 	elseif msg == 'off' then
 		PotReminderDB.enabled = false
+	elseif msg == 'sound' then
+		PotReminderDB.play_sound = not PotReminderDB.play_sound
 	elseif msg == 'test' then
 		local info = ChatTypeInfo["SYSTEM"]
 		--UIErrorsFrame:AddMessage("HELLO WORLD", 0.0, 1.0, 0.0, 1.0, UIERRORS_HOLD_TIME or 5)
@@ -335,6 +338,7 @@ local function handler(msg, editbox)
 	else
 		print(_usage)
 	end
-	ns:Print("is ".. (PotReminderDB.enabled and "enabled" or "disabled") ..". Debug is "..(_debug and "on" or "off"))
+	ns:Print("is ".. (PotReminderDB.enabled and "enabled" or "disabled") ..". Debug is "..(_debug and "on" or "off") ..
+	". Sound is "..(PotReminderDB.play_sound and "on." or "off."))
 end
 SlashCmdList["POTREMINDER"] = handler
