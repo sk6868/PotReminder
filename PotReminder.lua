@@ -73,7 +73,7 @@ function ns:_CreateOptionsPanel()
 	title:SetText(L["General Options"])
 
 	local checkbox1 = newCheckbox(panel,
-		L["Enable"],
+		L["Enable Addon"],
 		L["Toggle addon enable"],
 		function(self, value) PotReminderDB.enabled = value end)
 	checkbox1:SetChecked(PotReminderDB.enabled)

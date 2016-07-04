@@ -2,7 +2,7 @@
 
 local translations = {
 	["Pot Reminder"] 				= "물약 잊지말자",
-	["Enable"]						= "활성화",
+	["Enable Addon"]				= "활성화",
 	["Toggle addon enable"]			= "애드온 켜기/끄기",
 	["LFR"]							= "공격대 찾기",
 	["Enable in LFR"]				= "공격대 찾기 난이도에서 활성화",
