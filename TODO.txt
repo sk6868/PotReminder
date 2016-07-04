@@ -1,0 +1,12 @@
+1 -- add lust due to beast mastery (not registering because sourceName is the pet's name so UnitInRaid(sourceName) fails)
+     Does UnitPlayerOrPetInRaid(sourceName) or UnitPlayerOrPetInParty(sourceName) work?
+
+2 -- show in message who lusted
+
+3 -- we should have a grace period where two bloodlusts cannot be shorter than.  That is, if two ppl cast bloodlust and
+     their cast times differ by say 0.5 seconds, we should ignore the second one, assuming both pass the 'casted while
+	 player was not sated' condition.
+	 
+4 -- Lock/Unlock and move while Unlock feature (also remember last frame position)
+
+5 -- lust before boss engage doesn't fire
