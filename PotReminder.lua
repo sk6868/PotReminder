@@ -290,7 +290,7 @@ local function FrameOnEvent(frame, event, ...)
 		frame:UnregisterEvent("ADDON_LOADED")
 		if not PotReminderDB then PotReminderDB = {} end
 		for k, v in pairs(defaults) do
-			if not PotReminderDB[k] then
+			if PotReminderDB[k] == nil then
 				PotReminderDB[k] = v
 			end
 		end
