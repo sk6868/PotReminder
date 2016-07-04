@@ -10,3 +10,5 @@
 4 -- Lock/Unlock and move while Unlock feature (also remember last frame position)
 
 5 -- lust before boss engage doesn't fire
+
+6 -- print message to chat option

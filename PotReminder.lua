@@ -13,6 +13,7 @@ local defaults = {
 	enabled = true,
 	lfr = true,
 	normal = true,
+	to_chat = true,
 	play_sound = false
 }
 
@@ -99,6 +100,13 @@ function ns:_CreateOptionsPanel()
 		function(self, value) PotReminderDB.play_sound = value end)
 	checkbox4:SetChecked(PotReminderDB.play_sound)
 	checkbox4:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -106)
+	
+	local checkbox5 = newCheckbox(panel, "PotReminderOptionCheck5",
+		L["ChatAlert"],
+		L["Alert to chat"],
+		function(self, value) PotReminderDB.to_chat = value end)
+	checkbox5:SetChecked(PotReminderDB.to_chat)
+	checkbox5:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -136)
 		
 	-- Register in the Interface Addon Options GUI
 	-- Set the name for the Category for the Options Panel
@@ -262,21 +270,21 @@ end
 
 function ns:RemindMeToPot(sourceName, spellID)
 	if self:CheckforValidLust(sourceName, spellID) then
+		local msg, info = nil, nil
 		self:_debugPrintf("RemindMeToPot(%s, %d) type(spellID)=[%s]", sourceName, spellID, type(spellID))
 		if self:UpdatePotionCooldowns() then
-			local msg = L["MSG1"]:format(sourceName)
-			local info = ChatTypeInfo["SYSTEM"]
-			self:_debugPrintf(msg)
-			--UIErrorsFrame:AddMessage(msg, 1.0, 0.0, 0.0, info.id, UIERRORS_HOLD_TIME or 5)
-			self:PlayAlert()
-			CombatText_AddMessage(msg, COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
+			msg = L["MSG1"]:format(sourceName)
+			info = ChatTypeInfo["SYSTEM"]
 		else
-			local msg = L["MSG2"]:format(sourceName)
-			local info = ChatTypeInfo["SYSTEM"]
-			self:_debugPrintf(msg)
-			--UIErrorsFrame:AddMessage(msg, 0.0, 1.0, 0.0, info.id, UIERRORS_HOLD_TIME or 5)
-			self:PlayAlert()
-			CombatText_AddMessage(msg, COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
+			msg = L["MSG2"]:format(sourceName)
+			info = ChatTypeInfo["SYSTEM"]
+		end
+		self:_debugPrintf(msg)
+		--UIErrorsFrame:AddMessage(msg, 1.0, 0.0, 0.0, info.id, UIERRORS_HOLD_TIME or 5)
+		self:PlayAlert()
+		CombatText_AddMessage(msg, COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
+		if PotReminderDB.to_chat then
+			self:Print( NORMAL_FONT_COLOR_CODE..msg..FONT_COLOR_CODE_CLOSE )
 		end
 	end
 end
@@ -338,7 +346,9 @@ local function handler(msg, editbox)
 	else
 		print(_usage)
 	end
-	ns:Print("is ".. (PotReminderDB.enabled and "enabled" or "disabled") ..". Debug is "..(_debug and "on" or "off") ..
-	". Sound is "..(PotReminderDB.play_sound and "on." or "off."))
+	ns:Print("is ".. (PotReminderDB.enabled and "enabled" or "disabled") ..
+	". Debug is "..(_debug and "on" or "off") ..
+	". Sound is "..(PotReminderDB.play_sound and "on" or "off") ..
+	". Print to Chat is "..(PotReminderDB.to_chat and "on." or "off."))
 end
 SlashCmdList["POTREMINDER"] = handler
