@@ -12,3 +12,7 @@
 5 -- lust before boss engage doesn't fire
 
 6 -- print message to chat option
+
+7 -- maybe we should register for ENCOUNTER_START/ENCOUNTER_END because we can have this situation:
+     kill trash then we add the boss.  When PLAYER_REGEN_DISABLED fires, we don't have boss but then we
+	 get boss... so addon does not activate...

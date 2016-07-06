@@ -28,6 +28,8 @@ PotReminder Usage
 local _debug = false
 ns.difficulty = 0
 
+local function NOOP() end
+
 function ns:Print(...)
     print(GREEN_FONT_COLOR_CODE .. "PR:" .. FONT_COLOR_CODE_CLOSE, ...)
 end
@@ -145,6 +147,7 @@ local LustSpells = {
 	[80353] = true, -- Time Warp
 	[90355] = true, -- Ancient Hysteria
 	[178207] = true, -- Drums of Fury
+	[160452] = true, -- Netherwinds, Nether Ray (hunter pet)
 }
 
 local SatedDebuffs = {
@@ -152,6 +155,7 @@ local SatedDebuffs = {
 	95809, -- Insanity (applied by Ancient Hysteria)
 	57724, -- Sated (applied by Bloodlust)
 	57723, -- Exhaustion (applied by Heroism and Drums of Fury)
+	160455, -- Fatigued (Netherwinds sated version)
 }
 
 local function CalcDebuff(uid, debuff) -- to fill some information gaps of UnitDebuff()
@@ -250,8 +254,9 @@ function ns:CheckforValidLust(sourceName, spellID)
 	return false
 end
 
-function ns:ListenForLust(eventFrame)
-	self:_debugPrintf("ListenForLust")
+function ns:ListenForLust(eventFrame, force)
+	self:_debugPrintf("ListenForLust force=%s", tostring(force))
+	if eventFrame:IsEventRegistered('COMBAT_LOG_EVENT_UNFILTERED') then return end
 	local isInstance, instanceType = IsInInstance()
 	if PotReminderDB.enabled and isInstance and (instanceType == 'party' or instanceType == 'raid') then
 		self.difficulty = select(3, GetInstanceInfo())
@@ -262,7 +267,7 @@ function ns:ListenForLust(eventFrame)
 			activate = false
 		end
 		self:_debugPrintf("%s %s", tostring(activate), tostring(self:CheckIfBossEngaged()))
-		if activate and self:CheckIfBossEngaged() and (not eventFrame:IsEventRegistered('COMBAT_LOG_EVENT_UNFILTERED')) then
+		if activate and (force or self:CheckIfBossEngaged()) then
 			eventFrame:RegisterEvent('COMBAT_LOG_EVENT_UNFILTERED')
 		end
 	end
@@ -271,7 +276,7 @@ end
 function ns:RemindMeToPot(sourceName, spellID)
 	if self:CheckforValidLust(sourceName, spellID) then
 		local msg, info = nil, nil
-		self:_debugPrintf("RemindMeToPot(%s, %d) type(spellID)=[%s]", sourceName, spellID, type(spellID))
+		self:_debugPrintf("RemindMeToPot(%s, %d)", sourceName, spellID)
 		if self:UpdatePotionCooldowns() then
 			msg = L["MSG1"]:format(sourceName)
 			info = ChatTypeInfo["SYSTEM"]
@@ -292,9 +297,11 @@ end
 local function FrameOnEvent(frame, event, ...)
 	local msg = ...
 	if (event == 'ADDON_LOADED') and (msg == addonName) then
-		frame:RegisterEvent("PLAYER_REGEN_DISABLED")
-		frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+		frame:RegisterEvent("PLAYER_REGEN_DISABLED") -- need these two in case we reload incombat
+		frame:RegisterEvent("PLAYER_REGEN_ENABLED") -- need these two in case we reload incombat
 		frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+		frame:RegisterEvent("ENCOUNTER_START")
+		frame:RegisterEvent("ENCOUNTER_END")
 		frame:UnregisterEvent("ADDON_LOADED")
 		if not PotReminderDB then PotReminderDB = {} end
 		for k, v in pairs(defaults) do
@@ -304,6 +311,12 @@ local function FrameOnEvent(frame, event, ...)
 		end
 		ns:_CreateOptionsPanel()
 		ns.alertFrame = ns.alertFrame or ns:CreateAlertFrame()
+	elseif event == 'ENCOUNTER_START' then
+		ns:_debugPrintf('ENCOUNTER_START')
+		ns:ListenForLust(frame, true)
+	elseif event == 'ENCOUNTER_END' then
+		ns:_debugPrintf('ENCOUNTER_END')
+		frame:UnregisterEvent('COMBAT_LOG_EVENT_UNFILTERED')
 	elseif event == 'PLAYER_REGEN_DISABLED' then
 		ns:_debugPrintf('PLAYER_REGEN_DISABLED')
 		ns:ListenForLust(frame)
