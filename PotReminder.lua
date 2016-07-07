@@ -74,45 +74,50 @@ function ns:_CreateOptionsPanel()
 	local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 	title:SetPoint("TOPLEFT", 16, -16)
 	title:SetText(L["General Options"])
+	local version_str = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	version_str:SetPoint("TOPLEFT", 200, -21)
+	version_str:SetVertexColor(0.0, 1.0, 0.0, 1.0)
+	version_str:SetText(addonName..L[" Version: "]..self.version)
 
-	local checkbox1 = newCheckbox(panel, "PotReminderOptionCheck1",
+	panel.checkbox1 = newCheckbox(panel, "PotReminderOptionCheck1",
 		L["Enable"],
 		L["Toggle addon enable"],
 		function(self, value) PotReminderDB.enabled = value end)
-	checkbox1:SetChecked(PotReminderDB.enabled)
-	checkbox1:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -16)
+	panel.checkbox1:SetChecked(PotReminderDB.enabled)
+	panel.checkbox1:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -16)
 	
-	local checkbox2 = newCheckbox(panel, "PotReminderOptionCheck2",
+	panel.checkbox2 = newCheckbox(panel, "PotReminderOptionCheck2",
 		L["LFR"],
 		L["Enable in LFR"],
 		function(self, value) PotReminderDB.lfr = value end)
-	checkbox2:SetChecked(PotReminderDB.lfr)
-	checkbox2:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -46)
+	panel.checkbox2:SetChecked(PotReminderDB.lfr)
+	panel.checkbox2:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -46)
 	
-	local checkbox3 = newCheckbox(panel, "PotReminderOptionCheck3",
+	panel.checkbox3 = newCheckbox(panel, "PotReminderOptionCheck3",
 		L["Normal"],
 		L["Enable in Normal mode"],
 		function(self, value) PotReminderDB.normal = value end)
-	checkbox3:SetChecked(PotReminderDB.normal)
-	checkbox3:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -76)
+	panel.checkbox3:SetChecked(PotReminderDB.normal)
+	panel.checkbox3:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -76)
 	
-	local checkbox4 = newCheckbox(panel, "PotReminderOptionCheck4",
+	panel.checkbox4 = newCheckbox(panel, "PotReminderOptionCheck4",
 		L["Enable Sound"],
 		L["Enable Sound"],
 		function(self, value) PotReminderDB.play_sound = value end)
-	checkbox4:SetChecked(PotReminderDB.play_sound)
-	checkbox4:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -106)
+	panel.checkbox4:SetChecked(PotReminderDB.play_sound)
+	panel.checkbox4:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -106)
 	
-	local checkbox5 = newCheckbox(panel, "PotReminderOptionCheck5",
+	panel.checkbox5 = newCheckbox(panel, "PotReminderOptionCheck5",
 		L["ChatAlert"],
 		L["Alert to chat"],
 		function(self, value) PotReminderDB.to_chat = value end)
-	checkbox5:SetChecked(PotReminderDB.to_chat)
-	checkbox5:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -136)
+	panel.checkbox5:SetChecked(PotReminderDB.to_chat)
+	panel.checkbox5:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -136)
 		
 	-- Register in the Interface Addon Options GUI
 	-- Set the name for the Category for the Options Panel
 	panel.name = L["Pot Reminder"]
+
 	-- Add the panel to the Interface Options
 	InterfaceOptions_AddCategory(panel)
 	
@@ -266,7 +271,7 @@ function ns:ListenForLust(eventFrame, force)
 		elseif self:Normal() and (not PotReminderDB.normal) then
 			activate = false
 		end
-		self:_debugPrintf("%s %s", tostring(activate), tostring(self:CheckIfBossEngaged()))
+		self:_debugPrintf("activate=[%s] CheckIfBossEngaged=[%s]", tostring(activate), tostring(self:CheckIfBossEngaged()))
 		if activate and (force or self:CheckIfBossEngaged()) then
 			eventFrame:RegisterEvent('COMBAT_LOG_EVENT_UNFILTERED')
 		end
@@ -309,7 +314,8 @@ local function FrameOnEvent(frame, event, ...)
 				PotReminderDB[k] = v
 			end
 		end
-		ns:_CreateOptionsPanel()
+		ns.version = GetAddOnMetadata(addonName, "Version")
+		ns.optionsFrame = ns:_CreateOptionsPanel()
 		ns.alertFrame = ns.alertFrame or ns:CreateAlertFrame()
 	elseif event == 'ENCOUNTER_START' then
 		ns:_debugPrintf('ENCOUNTER_START')
@@ -347,10 +353,13 @@ local function handler(msg, editbox)
 		_debug = not _debug
 	elseif msg == 'on' then
 		PotReminderDB.enabled = true
+		ns.optionsFrame.checkbox1:SetChecked(PotReminderDB.enabled)
 	elseif msg == 'off' then
 		PotReminderDB.enabled = false
+		ns.optionsFrame.checkbox1:SetChecked(PotReminderDB.enabled)
 	elseif msg == 'sound' then
 		PotReminderDB.play_sound = not PotReminderDB.play_sound
+		ns.optionsFrame.checkbox4:SetChecked(PotReminderDB.play_sound)
 	elseif msg == 'test' then
 		local info = ChatTypeInfo["SYSTEM"]
 		--UIErrorsFrame:AddMessage("HELLO WORLD", 0.0, 1.0, 0.0, 1.0, UIERRORS_HOLD_TIME or 5)

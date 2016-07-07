@@ -1,6 +1,7 @@
 ## Interface: 60300
 ## Title: PotReminder
 ## Notes: Reminds you to pot when Bloodlust/Timewarp
+## Version: 1.0.3
 
 #@no-lib-strip@
 Libs\libs.xml
