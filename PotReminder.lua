@@ -14,7 +14,9 @@ local defaults = {
 	lfr = true,
 	normal = true,
 	to_chat = true,
-	play_sound = false
+	play_sound = false,
+	pot_check = true,
+	potcheck_delay = 10
 }
 
 local _usage = [[
@@ -113,7 +115,19 @@ function ns:_CreateOptionsPanel()
 		function(self, value) PotReminderDB.to_chat = value end)
 	panel.checkbox5:SetChecked(PotReminderDB.to_chat)
 	panel.checkbox5:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -136)
-		
+
+	panel.checkbox6 = newCheckbox(panel, "PotReminderOptionCheck6",
+		L["PotCheck"],
+		L["Check for lust pot"],
+		function(self, value) PotReminderDB.pot_check = value end)
+	panel.checkbox6:SetChecked(PotReminderDB.pot_check)
+	panel.checkbox6:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -196)
+	
+	-- create slider for potions check time
+	panel.slider1 = self:CreateSlider(panel, 'potionCheckSlider', 
+		L["Seconds after lust to check"], 0, 40, 200, 20, 5, PotReminderDB.potcheck_delay)
+	panel.slider1:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 150, -198)
+	
 	-- Register in the Interface Addon Options GUI
 	-- Set the name for the Category for the Options Panel
 	panel.name = L["Pot Reminder"]
@@ -296,7 +310,42 @@ function ns:RemindMeToPot(sourceName, spellID)
 		if PotReminderDB.to_chat then
 			self:Print( NORMAL_FONT_COLOR_CODE..msg..FONT_COLOR_CODE_CLOSE )
 		end
+		if PotReminderDB.pot_check then
+			self._potionchecktimer:Start(PotReminderDB.potcheck_delay * 1000, ns.CheckForPotionBuff)
+		end
 	end
+end
+
+local wod_potions = {
+	156579, -- Draenic Strength Potion
+	156578, -- Draenic Intellect Potion
+	156577, -- Draenic Agility Potion
+}
+
+local leg_potions = {
+	188028, -- Potion of the Old War
+	188027, -- Potion of Deadly Grace
+}
+
+local nopotion = {}
+
+function ns.CheckForPotionBuff(timer)
+	if (not IsInRaid()) and (not IsEncounterInProgress()) then return end
+	wipe(nopotion)
+	for rID = 1, GetNumGroupMembers() do
+		local u = "raid"..rID
+		local has = false
+		if (UnitGroupRolesAssigned(u) == "DAMAGER") then
+			for _, wod_potion in ipairs(wod_potions) do
+				if UnitBuff(u, GetSpellInfo(wod_potion)) then
+					has = true
+					break
+				end
+			end
+			if not has then tinsert(nopotion, (UnitName(u))) end
+		end
+	end
+	print(L["MSG0"]:format(timer.durationMillis/1000, table.concat(nopotion, ", ")))
 end
 
 local function FrameOnEvent(frame, event, ...)
@@ -317,18 +366,27 @@ local function FrameOnEvent(frame, event, ...)
 		ns.version = GetAddOnMetadata(addonName, "Version")
 		ns.optionsFrame = ns:_CreateOptionsPanel()
 		ns.alertFrame = ns.alertFrame or ns:CreateAlertFrame()
+		ns._potionchecktimer = ns.Timer:new{
+			durationMillis = PotReminderDB.potcheck_delay * 1000,
+			callback = ns.CheckForPotionBuff
+		}
 	elseif event == 'ENCOUNTER_START' then
 		ns:_debugPrintf('ENCOUNTER_START')
+		if PotReminderDB.pot_check then
+			ns._potionchecktimer:Start(100, ns.CheckForPotionBuff)
+		end
 		ns:ListenForLust(frame, true)
 	elseif event == 'ENCOUNTER_END' then
 		ns:_debugPrintf('ENCOUNTER_END')
 		frame:UnregisterEvent('COMBAT_LOG_EVENT_UNFILTERED')
+		ns._potionchecktimer:Stop()
 	elseif event == 'PLAYER_REGEN_DISABLED' then
 		ns:_debugPrintf('PLAYER_REGEN_DISABLED')
 		ns:ListenForLust(frame)
 	elseif event == 'PLAYER_REGEN_ENABLED' then
 		ns:_debugPrintf('PLAYER_REGEN_ENABLED')
 		frame:UnregisterEvent('COMBAT_LOG_EVENT_UNFILTERED')
+		ns._potionchecktimer:Stop()
 	elseif event == 'PLAYER_ENTERING_WORLD' then
 		ns:_debugPrintf('PLAYER_ENTERING_WORLD')
 		ns.difficulty = 0
@@ -361,7 +419,8 @@ local function handler(msg, editbox)
 		PotReminderDB.play_sound = not PotReminderDB.play_sound
 		ns.optionsFrame.checkbox4:SetChecked(PotReminderDB.play_sound)
 	elseif msg == 'test' then
-		local info = ChatTypeInfo["SYSTEM"]
+		--local info = ChatTypeInfo["SYSTEM"]
+		ns:UpdatePotionCooldowns()
 		--UIErrorsFrame:AddMessage("HELLO WORLD", 0.0, 1.0, 0.0, 1.0, UIERRORS_HOLD_TIME or 5)
 		CombatText_AddMessage("HELLO WORLD", COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
 		ns:PlayAlert()

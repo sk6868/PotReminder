@@ -81,3 +81,123 @@ function ns:PlayAlert()
 	end
 	self.alertFrame.Glow:Play()
 end
+
+function ns:CreateSlider(parent, name, desc, minval, maxval, width, height, stepvalue, defval)
+	local slider = CreateFrame('Slider', name, parent, 'OptionsSliderTemplate')
+	_G[name..'Low']:SetText(minval)
+	_G[name..'High']:SetText(maxval)
+	_G[name..'Text']:SetText(desc)
+	
+	slider:ClearAllPoints()
+	slider:SetOrientation("HORIZONTAL")
+	slider:SetMinMaxValues(minval, maxval)
+	slider:SetValue(defval)
+	slider:SetSize(width, height)
+	slider:SetValueStep(stepvalue)
+	slider:EnableMouseWheel(true)
+	slider:SetObeyStepOnDrag(true)
+	
+	slider.EditBox = self:CreateSliderEditBox(slider) -- must come after slider:SetValue
+	slider.EditBox:SetCursorPosition(0)
+	
+	slider:SetBackdrop({
+		bgFile = "Interface\\Buttons\\UI-SliderBar-Background",
+		edgeFile = "Interface\\Buttons\\UI-SliderBar-Border",
+		tile = true,
+		edgeSize = 8,
+		tileSize = 8,
+		insets = {left = 3, right = 3, top = 6, bottom = 6}
+	})
+	slider:SetBackdropBorderColor(0.7, 0.7, 0.7, 1.0)
+	slider:SetScript("OnEnter", function(self)
+		self:SetBackdropBorderColor(1, 1, 1, 1)
+	end)
+	slider:SetScript("OnLeave", function(self)
+		self:SetBackdropBorderColor(0.7, 0.7, 0.7, 1.0)
+	end)
+	slider:SetScript("OnMouseWheel", function(self, delta)
+		if delta > 0 then
+			self:SetValue(self:GetValue() + self:GetValueStep())
+		else
+			self:SetValue(self:GetValue() - self:GetValueStep())
+		end
+	end)
+	slider:SetScript("OnValueChanged", function(self, value)
+		slider.EditBox:SetText(value)
+		PotReminderDB.potcheck_delay = value
+	end)
+
+	return slider
+end
+
+function ns:CreateSliderEditBox(slider)
+	local editbox = CreateFrame("EditBox", nil, slider)
+	editbox:EnableMouseWheel(true)
+	editbox:SetAutoFocus(false)
+	editbox:SetNumeric(true)
+	editbox:SetJustifyH("Center")
+	editbox:SetFontObject(GameFontHighlightSmall)
+	editbox:SetSize(50, 14)
+	editbox:SetPoint("Top", slider, "Bottom", 0, -1)
+	editbox:SetTextInsets(4, 4, 0, 0)
+	editbox:SetBackdrop({
+		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+		edgeFile = "Interface\\ChatFrame\\ChatFrameBackground",
+		tile = true,
+		edgeSize = 1,
+		tileSize = 5
+	})
+	editbox:SetBackdropColor(0, 0, 0, 1)
+	editbox:SetBackdropBorderColor(0.2, 0.2, 0.2, 1.0)
+	editbox:SetText(slider:GetValue())
+	--[[editbox:SetScript("OnShow", function(self)
+	self:SetText("")
+	self:SetText(slider:GetValue())
+	end)]]
+	if InterfaceOptionsFrame then
+		InterfaceOptionsFrame:HookScript("OnShow", function(self)
+			--editbox:SetText("")
+			editbox:SetText(slider:GetValue())
+		end)
+	end
+	editbox:SetScript("OnEnter", function(self)
+		self:SetBackdropBorderColor(0.4, 0.4, 0.4, 1.0)
+	end)
+	editbox:SetScript("OnLeave", function(self)
+		self:SetBackdropBorderColor(0.2, 0.2, 0.2, 1.0)
+	end)
+	editbox:SetScript("OnMouseWheel", function(self, delta)
+		if delta > 0 then
+			slider:SetValue(slider:GetValue() + slider:GetValueStep())
+		else
+			slider:SetValue(slider:GetValue() - slider:GetValueStep())
+		end
+	end)
+	editbox:SetScript("OnEscapePressed", function(self)
+		self:ClearFocus()
+	end)
+	editbox:SetScript("OnEnterPressed", function(self)
+		local value = tonumber(self:GetText())
+		if value then
+			local min, max = slider:GetMinMaxValues()
+			if value >= min and value <= max then
+				slider:SetValue(value)
+			elseif value < min then
+				slider:SetValue(min)
+			elseif value > max then
+				slider:SetValue(max)
+			end
+			editbox:SetText(slider:GetValue())
+		else
+			slider:SetValue(slider:GetValue())
+		end
+		self:ClearFocus()
+	end)
+	editbox:SetScript("OnEditFocusLost", function(self)
+		self:HighlightText(0, 0)
+	end)
+	editbox:SetScript("OnEditFocusGained", function(self)
+		self:HighlightText(0, -1)
+	end)
+	return editbox
+end

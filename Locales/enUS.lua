@@ -44,9 +44,13 @@ local translations = {
 	["Enable Sound"]				= true,
 	["ChatAlert"]					= "Print to Chat",
 	["Alert to chat"]				= "Print alert to chat",
+	["PotCheck"]					= "Check for potion",
+	["Check for lust pot"]			= "Check if potion used after lust",
+	["MSG0"]						= "[No potion after %.2f seconds]: %s",
 	["MSG1"]						= "[%s] LUSTED! BUT POTIONS ARE IN COOLDOWN :(",
 	["MSG2"]						= "[%s] LUSTED! DRINK YOUR POTION!",
 	["General Options"]				= true,
+	["Seconds after lust to check"] = true,
 }
 
 ns:RegisterLocale("enUS", translations)

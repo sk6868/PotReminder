@@ -11,9 +11,13 @@ local translations = {
 	["Enable Sound"]				= "소리 알림 활성화",
 	["ChatAlert"]					= "채팅창에 알림",
 	["Alert to chat"]				= "채팅창에도 알림 메세지",
+	["PotCheck"]					= "물약 확인",
+	["Check for lust pot"]			= "블러드 후 물약 확인",
+	["MSG0"]						= "[%.2f초 후 물약 없음]: %s",
 	["MSG1"]						= "[%s]님 블러드 시전! 그러나 물약은 쿨...",
 	["MSG2"]						= "[%s]님 블러드 시전! 물약 잡주세요!!",
 	["General Options"]				= "일반 설정",
+	["Seconds after lust to check"] = "블러드 시전 몇초 후에 물약 체크",
 }
 
 ns:RegisterLocale("koKR", translations)
