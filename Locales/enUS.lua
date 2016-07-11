@@ -49,6 +49,7 @@ local translations = {
 	["MSG0"]						= "[No potion after %.2f seconds]: %s",
 	["MSG1"]						= "[%s] LUSTED! BUT POTIONS ARE IN COOLDOWN :(",
 	["MSG2"]						= "[%s] LUSTED! DRINK YOUR POTION!",
+	["NONE"]						= "none",
 	["General Options"]				= true,
 	["Seconds after lust to check"] = true,
 }

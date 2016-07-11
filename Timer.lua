@@ -31,9 +31,10 @@ function PotReminder_Timer:new(o)
     return newObject
 end
 
-function PotReminder_Timer:Start(durationMillis, callback, loop)
+function PotReminder_Timer:Start(durationMillis, flag, callback, loop)
     self:Stop()
     self.durationMillis = durationMillis
+	self.flag = flag
     self.callback = callback
     self:_Start(loop)
 end

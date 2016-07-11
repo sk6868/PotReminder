@@ -18,3 +18,5 @@
 	 get boss... so addon does not activate...
 	 
 8 -- include version number in Interface Options Panel
+
+9 -- add recall ability for who didn't use potions on prepull and postlust

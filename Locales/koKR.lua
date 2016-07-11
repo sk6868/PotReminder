@@ -16,6 +16,7 @@ local translations = {
 	["MSG0"]						= "[%.2f초 후 물약 없음]: %s",
 	["MSG1"]						= "[%s]님 블러드 시전! 그러나 물약은 쿨...",
 	["MSG2"]						= "[%s]님 블러드 시전! 물약 잡주세요!!",
+	["NONE"]						= "전딜진 마심.",
 	["General Options"]				= "일반 설정",
 	["Seconds after lust to check"] = "블러드 시전 몇초 후에 물약 체크",
 }

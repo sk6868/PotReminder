@@ -8,6 +8,10 @@ local UnitDebuff = UnitDebuff
 local UnitExists = UnitExists
 local UnitInParty = UnitInParty
 local UnitInRaid = UnitInRaid
+local UnitBuff = UnitBuff
+local UnitName = UnitName
+local UnitGroupRolesAssigned = UnitGroupRolesAssigned
+local GetSpellInfo = GetSpellInfo
 
 local defaults = {
 	enabled = true,
@@ -16,7 +20,7 @@ local defaults = {
 	to_chat = true,
 	play_sound = false,
 	pot_check = true,
-	potcheck_delay = 10
+	potcheck_delay = 5
 }
 
 local _usage = [[
@@ -311,7 +315,7 @@ function ns:RemindMeToPot(sourceName, spellID)
 			self:Print( NORMAL_FONT_COLOR_CODE..msg..FONT_COLOR_CODE_CLOSE )
 		end
 		if PotReminderDB.pot_check then
-			self._potionchecktimer:Start(PotReminderDB.potcheck_delay * 1000, ns.CheckForPotionBuff)
+			self._potionchecktimer:Start(PotReminderDB.potcheck_delay * 1000, 'LUST', ns.CheckForPotionBuff)
 		end
 	end
 end
@@ -327,11 +331,35 @@ local leg_potions = {
 	188027, -- Potion of Deadly Grace
 }
 
-local nopotion = {}
+local no_prepull_potion = {}
+local no_lust_potion = {}
 
+local function History()
+	if no_prepull_potion and (#no_prepull_potion > 0) then
+		print(L["MSG0"]:format(0.2, table.concat(no_prepull_potion, ", ")))
+	else
+		print(L["MSG0"]:format(0.2, L["NONE"]))
+	end
+	if no_lust_potion and (#no_lust_potion > 0) then
+		print(L["MSG0"]:format(PotReminderDB.potcheck_delay, table.concat(no_lust_potion, ", ")))
+	else
+		print(L["MSG0"]:format(PotReminderDB.potcheck_delay, L["NONE"]))
+	end
+end
+
+-- no use checking IsEncounterInProgress here since it is unreliable @ ENCOUNTER_START
+-- http://www.wowinterface.com/forums/showthread.php?t=48377
 function ns.CheckForPotionBuff(timer)
-	if (not IsInRaid()) and (not IsEncounterInProgress()) then return end
-	wipe(nopotion)
+	ns:_debugPrintf("CheckForPotionBuff[%s] IsInRaid[%s]", timer.flag, tostring(IsInRaid()))
+	if (not IsInRaid()) then return end
+	local no_potion = nil
+	if timer.flag == 'PREPULL' then
+		no_potion = no_prepull_potion
+	elseif timer.flag == 'LUST' then
+		no_potion = no_lust_potion
+	end
+	assert(no_potion ~= nil, "Critical Logic Error")
+	wipe(no_potion)
 	for rID = 1, GetNumGroupMembers() do
 		local u = "raid"..rID
 		local has = false
@@ -342,10 +370,14 @@ function ns.CheckForPotionBuff(timer)
 					break
 				end
 			end
-			if not has then tinsert(nopotion, (UnitName(u))) end
+			if not has then tinsert(no_potion, (UnitName(u))) end
 		end
 	end
-	print(L["MSG0"]:format(timer.durationMillis/1000, table.concat(nopotion, ", ")))
+	if (#no_potion > 0) then
+		print(L["MSG0"]:format(timer.durationMillis/1000, table.concat(no_potion, ", ")))
+	else
+		print(L["MSG0"]:format(timer.durationMillis/1000, L["NONE"]))
+	end
 end
 
 local function FrameOnEvent(frame, event, ...)
@@ -373,7 +405,7 @@ local function FrameOnEvent(frame, event, ...)
 	elseif event == 'ENCOUNTER_START' then
 		ns:_debugPrintf('ENCOUNTER_START')
 		if PotReminderDB.pot_check then
-			ns._potionchecktimer:Start(100, ns.CheckForPotionBuff)
+			ns._potionchecktimer:Start(200, 'PREPULL', ns.CheckForPotionBuff)
 		end
 		ns:ListenForLust(frame, true)
 	elseif event == 'ENCOUNTER_END' then
@@ -426,6 +458,7 @@ local function handler(msg, editbox)
 		ns:PlayAlert()
 	else
 		print(_usage)
+		History()
 	end
 	ns:Print("is ".. (PotReminderDB.enabled and "enabled" or "disabled") ..
 	". Debug is "..(_debug and "on" or "off") ..
