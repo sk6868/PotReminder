@@ -20,7 +20,8 @@ local defaults = {
 	to_chat = true,
 	play_sound = false,
 	pot_check = true,
-	potcheck_delay = 5
+	potcheck_delay = 5,
+	pot_colors = false,
 }
 
 local _usage = [[
@@ -32,6 +33,8 @@ PotReminder Usage
 /pr sound <toggle sound>
 ]]
 local _debug = false
+local prepull_delay = 750 -- in milliseconds
+
 ns.difficulty = 0
 
 local function NOOP() end
@@ -120,17 +123,24 @@ function ns:_CreateOptionsPanel()
 	panel.checkbox5:SetChecked(PotReminderDB.to_chat)
 	panel.checkbox5:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -136)
 
+	panel.checkbox5a = newCheckbox(panel, "PotReminderOptionCheck5a",
+		L["ClassColors"],
+		L["Show class colors"],
+		function(self, value) PotReminderDB.pot_colors = value end)
+	panel.checkbox5a:SetChecked(PotReminderDB.pot_colors)
+	panel.checkbox5a:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -166)
+	
 	panel.checkbox6 = newCheckbox(panel, "PotReminderOptionCheck6",
 		L["PotCheck"],
 		L["Check for lust pot"],
 		function(self, value) PotReminderDB.pot_check = value end)
 	panel.checkbox6:SetChecked(PotReminderDB.pot_check)
-	panel.checkbox6:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -196)
+	panel.checkbox6:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -206)
 	
 	-- create slider for potions check time
 	panel.slider1 = self:CreateSlider(panel, 'potionCheckSlider', 
 		L["Seconds after lust to check"], 0, 40, 200, 20, 5, PotReminderDB.potcheck_delay)
-	panel.slider1:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 150, -198)
+	panel.slider1:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 150, -208)
 	
 	-- Register in the Interface Addon Options GUI
 	-- Set the name for the Category for the Options Panel
@@ -239,8 +249,7 @@ end
 function ns:UpdatePotionCooldowns()
 	self:_debugPrintf("UpdatePotionCooldowns")
 	for bag = 0, NUM_BAG_SLOTS do
-		local numSlots = GetContainerNumSlots(bag)
-		for i = 1, numSlots do
+		for i = 1, GetContainerNumSlots(bag) do
 			local itemID = GetContainerItemID(bag, i)
 			if itemID and self:IsPotionOnCooldown(itemID) then
 				return true
@@ -301,10 +310,18 @@ function ns:RemindMeToPot(sourceName, spellID)
 		local msg, info = nil, nil
 		self:_debugPrintf("RemindMeToPot(%s, %d)", sourceName, spellID)
 		if self:UpdatePotionCooldowns() then
-			msg = L["MSG1"]:format(sourceName)
+			if PotReminderDB.pot_colors then
+				msg = L["MSG1"]:format("|c"..RAID_CLASS_COLORS[select(2, UnitClass(Ambiguate(sourceName,'none')))].colorStr..sourceName..FONT_COLOR_CODE_CLOSE)
+			else
+				msg = L["MSG1"]:format(sourceName)
+			end
 			info = ChatTypeInfo["SYSTEM"]
 		else
-			msg = L["MSG2"]:format(sourceName)
+			if PotReminderDB.pot_colors then
+				msg = L["MSG2"]:format("|c"..RAID_CLASS_COLORS[select(2, UnitClass(Ambiguate(sourceName,'none')))].colorStr..sourceName..FONT_COLOR_CODE_CLOSE)
+			else
+				msg = L["MSG2"]:format(sourceName)
+			end
 			info = ChatTypeInfo["SYSTEM"]
 		end
 		self:_debugPrintf(msg)
@@ -312,7 +329,7 @@ function ns:RemindMeToPot(sourceName, spellID)
 		self:PlayAlert()
 		CombatText_AddMessage(msg, COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
 		if PotReminderDB.to_chat then
-			self:Print( NORMAL_FONT_COLOR_CODE..msg..FONT_COLOR_CODE_CLOSE )
+			self:Print( msg )
 		end
 		if PotReminderDB.pot_check then
 			self._potionchecktimer:Start(PotReminderDB.potcheck_delay * 1000, 'LUST', ns.CheckForPotionBuff)
@@ -336,9 +353,9 @@ local no_lust_potion = {}
 
 local function History()
 	if no_prepull_potion and (#no_prepull_potion > 0) then
-		print(L["MSG0"]:format(0.2, table.concat(no_prepull_potion, ", ")))
+		print(L["MSG0"]:format(prepull_delay/1000, table.concat(no_prepull_potion, ", ")))
 	else
-		print(L["MSG0"]:format(0.2, L["NONE"]))
+		print(L["MSG0"]:format(prepull_delay/1000, L["NONE"]))
 	end
 	if no_lust_potion and (#no_lust_potion > 0) then
 		print(L["MSG0"]:format(PotReminderDB.potcheck_delay, table.concat(no_lust_potion, ", ")))
@@ -370,7 +387,13 @@ function ns.CheckForPotionBuff(timer)
 					break
 				end
 			end
-			if not has then tinsert(no_potion, (UnitName(u))) end
+			if not has then
+				if PotReminderDB.pot_colors then
+					tinsert(no_potion, "|c"..RAID_CLASS_COLORS[select(2, UnitClass(u))].colorStr..UnitName(u)..FONT_COLOR_CODE_CLOSE)
+				else
+					tinsert(no_potion, (UnitName(u)))
+				end
+			end
 		end
 	end
 	if (#no_potion > 0) then
@@ -405,7 +428,7 @@ local function FrameOnEvent(frame, event, ...)
 	elseif event == 'ENCOUNTER_START' then
 		ns:_debugPrintf('ENCOUNTER_START')
 		if PotReminderDB.pot_check then
-			ns._potionchecktimer:Start(200, 'PREPULL', ns.CheckForPotionBuff)
+			ns._potionchecktimer:Start(prepull_delay, 'PREPULL', ns.CheckForPotionBuff)
 		end
 		ns:ListenForLust(frame, true)
 	elseif event == 'ENCOUNTER_END' then
@@ -454,7 +477,11 @@ local function handler(msg, editbox)
 		--local info = ChatTypeInfo["SYSTEM"]
 		ns:UpdatePotionCooldowns()
 		--UIErrorsFrame:AddMessage("HELLO WORLD", 0.0, 1.0, 0.0, 1.0, UIERRORS_HOLD_TIME or 5)
-		CombatText_AddMessage("HELLO WORLD", COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
+		if PotReminderDB.pot_colors then
+			CombatText_AddMessage(L["MSG2"]:format("|c"..RAID_CLASS_COLORS[select(2, UnitClass('player'))].colorStr..UnitName('player')..FONT_COLOR_CODE_CLOSE), COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
+		else
+			CombatText_AddMessage(L["MSG2"]:format(UnitName('player'), COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil))
+		end
 		ns:PlayAlert()
 	else
 		print(_usage)
