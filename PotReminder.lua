@@ -480,7 +480,7 @@ local function handler(msg, editbox)
 		if PotReminderDB.pot_colors then
 			CombatText_AddMessage(L["MSG2"]:format("|c"..RAID_CLASS_COLORS[select(2, UnitClass('player'))].colorStr..UnitName('player')..FONT_COLOR_CODE_CLOSE), COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
 		else
-			CombatText_AddMessage(L["MSG2"]:format(UnitName('player'), COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil))
+			CombatText_AddMessage(L["MSG2"]:format(UnitName('player')), COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
 		end
 		ns:PlayAlert()
 	else
