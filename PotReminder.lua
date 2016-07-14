@@ -21,6 +21,7 @@ local defaults = {
 	play_sound = false,
 	pot_check = true,
 	potcheck_delay = 5,
+	pot_rw = false,
 	pot_colors = false,
 }
 
@@ -135,12 +136,19 @@ function ns:_CreateOptionsPanel()
 		L["Check for lust pot"],
 		function(self, value) PotReminderDB.pot_check = value end)
 	panel.checkbox6:SetChecked(PotReminderDB.pot_check)
-	panel.checkbox6:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -206)
+	panel.checkbox6:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -208)
 	
 	-- create slider for potions check time
 	panel.slider1 = self:CreateSlider(panel, 'potionCheckSlider', 
 		L["Seconds after lust to check"], 0, 40, 200, 20, 5, PotReminderDB.potcheck_delay)
 	panel.slider1:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 150, -208)
+	
+	panel.checkbox5b = newCheckbox(panel, "PotReminderOptionCheck5b",
+		L["SendtoChat"],
+		L["Send to RW or Raid chat"],
+		function(self, value) PotReminderDB.pot_rw = value end)
+	panel.checkbox5b:SetChecked(PotReminderDB.pot_rw)
+	panel.checkbox5b:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -2, -240)
 	
 	-- Register in the Interface Addon Options GUI
 	-- Set the name for the Category for the Options Panel
@@ -190,6 +198,41 @@ local SatedDebuffs = {
 	57723, -- Exhaustion (applied by Heroism and Drums of Fury)
 	160455, -- Fatigued (Netherwinds sated version)
 }
+
+local escapes = {
+    ["|c%x%x%x%x%x%x%x%x"] = "", -- color start
+    ["|r"] = "", -- color end
+}
+local function unescape(str)
+    for k, v in pairs(escapes) do
+        str = gsub(str, k, v)
+    end
+    return str
+end
+
+function ns:SendToChat(chatMessage)
+	self:_debugPrintf("SendToChat")
+	if IsInRaid() and IsInInstance() then
+		if PotReminderDB.pot_rw and (not self:LFR()) then -- disable rw or raid chat in LFR
+			if UnitIsGroupAssistant("player") or UnitIsGroupLeader("player") then
+				SendChatMessage(unescape(chatMessage), "RAID_WARNING")
+			else
+				SendChatMessage(unescape(chatMessage), IsPartyLFG() and "INSTANCE_CHAT" or "RAID")
+			end
+		else
+			self:Print(chatMessage)
+		end
+	else
+		-- totally disable in non-raid environments
+		--[[
+		if PotReminderDB.pot_rw then
+			SendChatMessage(chatMessage, "SAY", nil, nil)
+		else
+			self:Print(ICON_LIST[1].."0|t"..chatMessage)
+		end
+		]]--
+	end
+end
 
 local function CalcDebuff(uid, debuff) -- to fill some information gaps of UnitDebuff()
 	local name, icon, count, dur, expirationTime, caster, sdur, timeActive, start, dname
@@ -397,9 +440,9 @@ function ns.CheckForPotionBuff(timer)
 		end
 	end
 	if (#no_potion > 0) then
-		print(L["MSG0"]:format(timer.durationMillis/1000, table.concat(no_potion, ", ")))
+		ns:SendToChat(L["MSG0"]:format(timer.durationMillis/1000, table.concat(no_potion, ", ")))
 	else
-		print(L["MSG0"]:format(timer.durationMillis/1000, L["NONE"]))
+		ns:SendToChat(L["MSG0"]:format(timer.durationMillis/1000, L["NONE"]))
 	end
 end
 
