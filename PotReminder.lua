@@ -140,7 +140,7 @@ function ns:_CreateOptionsPanel()
 	
 	-- create slider for potions check time
 	panel.slider1 = self:CreateSlider(panel, 'potionCheckSlider', 
-		L["Seconds after lust to check"], 0, 40, 200, 20, 5, PotReminderDB.potcheck_delay)
+		L["Seconds after lust to check"], 0, 40, 200, 20, 2, PotReminderDB.potcheck_delay)
 	panel.slider1:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 150, -208)
 	
 	panel.checkbox5b = newCheckbox(panel, "PotReminderOptionCheck5b",
