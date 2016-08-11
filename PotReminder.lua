@@ -370,7 +370,9 @@ function ns:RemindMeToPot(sourceName, spellID)
 		self:_debugPrintf(msg)
 		--UIErrorsFrame:AddMessage(msg, 1.0, 0.0, 0.0, info.id, UIERRORS_HOLD_TIME or 5)
 		self:PlayAlert()
-		CombatText_AddMessage(msg, COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
+		if CombatText_AddMessage then
+			CombatText_AddMessage(msg, COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
+		end
 		if PotReminderDB.to_chat then
 			self:Print( msg )
 		end
@@ -490,9 +492,9 @@ local function FrameOnEvent(frame, event, ...)
 		ns.difficulty = 0
 		ns:UpdatePotionCooldowns()
 		ns.playerName = UnitName('player')
-		if (CombatText_AddMessage == nil) then
-			UIParentLoadAddOn("Blizzard_CombatText")
-		end
+		--if (CombatText_AddMessage == nil) then
+		--	UIParentLoadAddOn("Blizzard_CombatText")
+		--end
 	elseif event == 'COMBAT_LOG_EVENT_UNFILTERED' then
 		local _, subevent, _, _, sourceName, _, _, _, _, _, _, spellID, spellName = ...
 		if subevent == 'SPELL_CAST_SUCCESS' then
@@ -523,10 +525,12 @@ local function handler(msg, editbox)
 		--local info = ChatTypeInfo["SYSTEM"]
 		ns:UpdatePotionCooldowns()
 		--UIErrorsFrame:AddMessage("HELLO WORLD", 0.0, 1.0, 0.0, 1.0, UIERRORS_HOLD_TIME or 5)
-		if PotReminderDB.pot_colors then
-			CombatText_AddMessage(L["MSG2"]:format("|c"..RAID_CLASS_COLORS[select(2, UnitClass('player'))].colorStr..UnitName('player')..FONT_COLOR_CODE_CLOSE), COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
-		else
-			CombatText_AddMessage(L["MSG2"]:format(UnitName('player')), COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
+		if CombatText_AddMessage then
+			if PotReminderDB.pot_colors then
+				CombatText_AddMessage(L["MSG2"]:format("|c"..RAID_CLASS_COLORS[select(2, UnitClass('player'))].colorStr..UnitName('player')..FONT_COLOR_CODE_CLOSE), COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
+			else
+				CombatText_AddMessage(L["MSG2"]:format(UnitName('player')), COMBAT_TEXT_SCROLL_FUNCTION, 0.0, 1.0, 0.0, "crit", nil)
+			end
 		end
 		ns:PlayAlert()
 	else
