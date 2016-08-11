@@ -490,6 +490,9 @@ local function FrameOnEvent(frame, event, ...)
 		ns.difficulty = 0
 		ns:UpdatePotionCooldowns()
 		ns.playerName = UnitName('player')
+		if (CombatText_AddMessage == nil) then
+			UIParentLoadAddOn("Blizzard_CombatText")
+		end
 	elseif event == 'COMBAT_LOG_EVENT_UNFILTERED' then
 		local _, subevent, _, _, sourceName, _, _, _, _, _, _, spellID, spellName = ...
 		if subevent == 'SPELL_CAST_SUCCESS' then
