@@ -426,8 +426,10 @@ function ns.CheckForPotionBuff(timer)
 		local u = "raid"..rID
 		local has = false
 		if (UnitGroupRolesAssigned(u) == "DAMAGER") then
-			for _, wod_potion in ipairs(wod_potions) do
-				if UnitBuff(u, GetSpellInfo(wod_potion)) then
+			--for _, wod_potion in ipairs(wod_potions) do
+			for _, leg_potion in ipairs(leg_potions) do
+				--if UnitBuff(u, GetSpellInfo(wod_potion)) then
+				if UnitBuff(u, GetSpellInfo(leg_potion)) then
 					has = true
 					break
 				end
