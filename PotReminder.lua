@@ -391,6 +391,7 @@ local wod_potions = {
 local leg_potions = {
 	188028, -- Potion of the Old War
 	188027, -- Potion of Deadly Grace
+	229206, -- Potion of Prolonged Power
 }
 
 local no_prepull_potion = {}
