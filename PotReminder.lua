@@ -188,6 +188,7 @@ local LustSpells = {
 	[80353] = true, -- Time Warp
 	[90355] = true, -- Ancient Hysteria
 	[178207] = true, -- Drums of Fury
+	[230935] = true, -- Drums of the Mountain
 	[160452] = true, -- Netherwinds, Nether Ray (hunter pet)
 }
 
@@ -195,7 +196,7 @@ local SatedDebuffs = {
 	80354, -- Temporal Displacement (applied by Time Warp)
 	95809, -- Insanity (applied by Ancient Hysteria)
 	57724, -- Sated (applied by Bloodlust)
-	57723, -- Exhaustion (applied by Heroism and Drums of Fury)
+	57723, -- Exhaustion (applied by Heroism, Drums of Fury and Drums of the Mountain)
 	160455, -- Fatigued (Netherwinds sated version)
 }
 
