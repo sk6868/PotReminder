@@ -36,6 +36,37 @@ PotReminder Usage
 local _debug = false
 local prepull_delay = 750 -- in milliseconds
 
+local function getPetOwner(pet, guid)
+	if UnitGUID("pet") == guid then
+		return UnitName("player")
+	end
+
+	local owner
+	if IsInRaid() then
+		for i=1, GetNumGroupMembers() do
+			if UnitGUID(("raid%dpet"):format(i)) == guid then
+				owner = ("raid%d"):format(i)
+				break
+			end
+		end
+	else
+		for i=1, GetNumSubgroupMembers() do
+			if UnitGUID(("party%dpet"):format(i)) == guid then
+				owner = ("party%d"):format(i)
+				break
+			end
+		end
+	end
+	if owner then
+		local name, server = UnitName(owner)
+		if server and server ~= "" then
+			name = name .."-".. server
+		end
+		return name
+	end
+	return pet
+end
+
 ns.difficulty = 0
 
 local function NOOP() end
@@ -349,10 +380,13 @@ function ns:ListenForLust(eventFrame, force)
 	end
 end
 
-function ns:RemindMeToPot(sourceName, spellID)
+function ns:RemindMeToPot(sourceName, sourceGUID, spellID)
 	if self:CheckforValidLust(sourceName, spellID) then
 		local msg, info = nil, nil
 		self:_debugPrintf("RemindMeToPot(%s, %d)", sourceName, spellID)
+		if spellID == 90355 or spellID == 160452 then
+			sourceName = getPetOwner(sourceName, sourceGUID)
+		end
 		if self:UpdatePotionCooldowns() then
 			if PotReminderDB.pot_colors then
 				msg = L["MSG1"]:format("|c"..RAID_CLASS_COLORS[select(2, UnitClass(Ambiguate(sourceName,'none')))].colorStr..sourceName..FONT_COLOR_CODE_CLOSE)
@@ -500,9 +534,9 @@ local function FrameOnEvent(frame, event, ...)
 		--	UIParentLoadAddOn("Blizzard_CombatText")
 		--end
 	elseif event == 'COMBAT_LOG_EVENT_UNFILTERED' then
-		local _, subevent, _, _, sourceName, _, _, _, _, _, _, spellID, spellName = ...
+		local _, subevent, _, sourceGUID, sourceName, _, _, _, _, _, _, spellID, spellName = ...
 		if subevent == 'SPELL_CAST_SUCCESS' then
-			ns:RemindMeToPot(sourceName, spellID)
+			ns:RemindMeToPot(sourceName, sourceGUID, spellID)
 		end
 	end
 end
